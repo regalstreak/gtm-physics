@@ -7,7 +7,7 @@ import './App.css'
 
 const axes = [
   { id: 'complexity', icon: '🧠', name: 'Solution complexity', low: 'Instant utility · minimal setup', high: 'Deep configuration · long implementation', hint: 'How hard is it to understand, evaluate, implement, and get value?' },
-  { id: 'atom', icon: '🧱', name: 'Atomizability', low: 'One user or team can start', high: 'Requires org-wide coordination', hint: 'Can someone adopt independently, or does the whole organization need to align?' },
+  { id: 'atom', icon: '🧱', name: 'Atomizability', low: 'Requires org-wide coordination', high: 'One user or team can start', hint: 'Can someone adopt independently, or does the whole organization need to align?' },
   { id: 'technical', icon: '🛠️', name: 'User technical skill', low: 'Non-technical users', high: 'Power users can self-serve', hint: 'Can your user evaluate and implement the product on their own?' },
   { id: 'power', icon: '🏛️', name: 'Internal user power', low: 'User must sell up', high: 'User can champion or buy', hint: 'Does the core user have authority or influence over the purchase?' },
   { id: 'ltv', icon: '💰', name: 'Transaction size / LTV', low: 'Low value · high volume', high: 'High value · long payback', hint: 'How much revenue does a customer generate over their lifetime?' },
