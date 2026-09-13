@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/products/:path*", "destination": "/index.html" }
+  ]
+}

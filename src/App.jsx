@@ -22,10 +22,10 @@ const axes = [
 ]
 
 const examples = [
-  { name: 'Clari', motion: 'Sales-led', note: 'Complex, high-ACV revenue platform with deep CRM integration and enterprise governance.', scores: { complexity: 5, atom: 1, technical: 2, power: 5, ltv: 5, maturity: 4, urgency: 5, frequency: 4, budget: 5, virality: 1, gravity: 5, governance: 5 } },
-  { name: 'Fathom', motion: 'PLG', note: 'Instant, individual call-note utility where every shared summary creates distribution.', scores: { complexity: 1, atom: 5, technical: 2, power: 2, ltv: 2, maturity: 5, urgency: 3, frequency: 5, budget: 1, virality: 5, gravity: 1, governance: 2 } },
-  { name: 'Notion', motion: 'PLG → Sales', note: 'A bottom-up workspace that spreads through teams before consolidating enterprise spend.', scores: { complexity: 2, atom: 5, technical: 2, power: 2, ltv: 2, maturity: 3, urgency: 1, frequency: 5, budget: 1, virality: 4, gravity: 2, governance: 2 } },
-  { name: 'Clay', motion: 'Hybrid + Channel', note: 'A technical, integration-heavy product that benefits from sales assist and implementation partners.', scores: { complexity: 4, atom: 2, technical: 5, power: 3, ltv: 4, maturity: 2, urgency: 3, frequency: 4, budget: 2, virality: 2, gravity: 5, governance: 3 } },
+  { name: 'Clari', slug: 'clari', motion: 'Sales-led', note: 'Complex, high-ACV revenue platform with deep CRM integration and enterprise governance.', scores: { complexity: 5, atom: 1, technical: 2, power: 5, ltv: 5, maturity: 4, urgency: 5, frequency: 4, budget: 5, virality: 1, gravity: 5, governance: 5 } },
+  { name: 'Fathom', slug: 'fathom', motion: 'PLG', note: 'Instant, individual call-note utility where every shared summary creates distribution.', scores: { complexity: 1, atom: 5, technical: 2, power: 2, ltv: 2, maturity: 5, urgency: 3, frequency: 5, budget: 1, virality: 5, gravity: 1, governance: 2 } },
+  { name: 'Notion', slug: 'notion', motion: 'PLG → Sales', note: 'A bottom-up workspace that spreads through teams before consolidating enterprise spend.', scores: { complexity: 2, atom: 5, technical: 2, power: 2, ltv: 2, maturity: 3, urgency: 1, frequency: 5, budget: 1, virality: 4, gravity: 2, governance: 2 } },
+  { name: 'Clay', slug: 'clay', motion: 'Hybrid + Channel', note: 'A technical, integration-heavy product that benefits from sales assist and implementation partners.', scores: { complexity: 4, atom: 2, technical: 5, power: 3, ltv: 4, maturity: 2, urgency: 3, frequency: 4, budget: 2, virality: 2, gravity: 5, governance: 3 } },
 ]
 
 const motions = {
@@ -77,6 +77,8 @@ function calculate(answers) {
 }
 
 export default function App() {
+  const productSlug = window.location.pathname.match(/^\/products\/([^/]+)\/?$/)?.[1]
+  const product = examples.find((example) => example.slug === productSlug)
   const sharedAnswers = readSharedAnswers()
   const [screen, setScreen] = useState(sharedAnswers ? 'result' : 'intro')
   const [index, setIndex] = useState(0)
@@ -92,6 +94,7 @@ export default function App() {
     setScreen('result')
   }
 
+  if (product) return <main className="app"><ProductPage product={product} /></main>
   if (screen === 'intro') return <main className="app"><Hero onStart={() => setScreen('quiz')} /></main>
   if (screen === 'result') return <main className="app"><Results ranking={ranking} answers={answers} onReset={reset} copied={copied} onCopy={() => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 1600) }} /></main>
 
@@ -129,4 +132,12 @@ function Credits() { return <footer className="credits"><span>Made with <b>♥</
 
 function ResponseMap({ answers }) { return <div className="response-map">{axes.map((axis) => { const score = answers[axis.id] ?? 3; return <div className="response-axis" key={axis.id}><span className="response-name"><i>{axis.icon}</i>{axis.name}</span><div className="response-scale"><div className="response-line"/><span style={{ left: `${((score - 1) / 4) * 100}%` }} /></div><b>{score === 1 ? 'LOW' : score === 5 ? 'HIGH' : `${score}/5`}</b></div> })}</div> }
 
-function ExampleCard({ example, answers }) { const distance = axes.reduce((total, axis) => total + Math.abs((answers[axis.id] ?? 3) - example.scores[axis.id]), 0); const similarity = Math.round(100 - (distance / (axes.length * 4)) * 100); const closest = axes.slice().sort((a,b) => Math.abs((answers[a.id] ?? 3) - example.scores[a.id]) - Math.abs((answers[b.id] ?? 3) - example.scores[b.id])).slice(0, 2); return <article className="example-card"><div className="example-card-top"><span>{example.motion}</span><b>{similarity}% <small>similar</small></b></div><h3>{example.name}</h3><p>{example.note}</p><div className="similar-signals">{closest.map(axis => <span key={axis.id}>{axis.icon} {axis.name}</span>)}</div></article> }
+function ExampleCard({ example, answers }) { const distance = axes.reduce((total, axis) => total + Math.abs((answers[axis.id] ?? 3) - example.scores[axis.id]), 0); const similarity = Math.round(100 - (distance / (axes.length * 4)) * 100); const closest = axes.slice().sort((a,b) => Math.abs((answers[a.id] ?? 3) - example.scores[a.id]) - Math.abs((answers[b.id] ?? 3) - example.scores[b.id])).slice(0, 2); return <a className="example-card" href={`/products/${example.slug}`}><div className="example-card-top"><span>{example.motion}</span><b>{similarity}% <small>similar</small></b></div><h3>{example.name}</h3><p>{example.note}</p><div className="similar-signals">{closest.map(axis => <span key={axis.id}>{axis.icon} {axis.name}</span>)}</div><span className="profile-link">View GTM physics <ArrowRight size={13}/></span></a> }
+
+function ProductPage({ product }) {
+  const ranking = useMemo(() => calculate(product.scores), [product])
+  const primary = ranking[0]
+  const similarProducts = examples.filter((example) => example.slug !== product.slug)
+  const position = examples.findIndex((example) => example.slug === product.slug)
+  const nextProduct = examples[(position + 1) % examples.length]
+  return <><header className="result-header"><a className="brand" href="/"><span>GTM</span> PHYSICS <i /></a><a className="restart" href="/">Run the diagnostic <ArrowRight size={16}/></a></header><section className="product-hero"><div><a className="product-back" href="/">← Back to GTM Physics</a><p className="product-motion">{product.motion}</p><h1>{product.name}'s<br/><em>GTM physics.</em></h1><p>{product.note}</p></div><div className="product-fit"><span>Natural motion</span><b>{motions[primary.key].name}</b><strong>{primary.score}% fit</strong></div></section><section className="product-forces"><div className="product-forces-copy"><h2>The forces<br/><em>at play.</em></h2><p>This profile maps {product.name} across the twelve commercial forces in Pete Kazanjy’s GTM Physics framework.</p></div><ResponseMap answers={product.scores}/></section><section className="product-playbook"><div><h2>How it<br/><em>goes to market.</em></h2><p>{motions[primary.key].description}</p></div><div className="product-motion-list">{ranking.slice(0, 4).map((item, index) => <div key={item.key}><span>{String(index + 1).padStart(2, '0')}</span><b>{motions[item.key].name}</b><strong>{item.score}%</strong></div>)}</div></section><section className="product-next"><div><span>Explore another profile</span><h2>{nextProduct.name}</h2><p>{nextProduct.motion}</p></div><a href={`/products/${nextProduct.slug}`}>View {nextProduct.name}'s GTM physics <ArrowRight size={17}/></a></section><section className="product-compare"><h2>Map your own<br/><em>GTM physics.</em></h2><a className="start" href="/">Run the diagnostic <ArrowRight size={19}/></a><div>{similarProducts.map((example) => <a key={example.slug} href={`/products/${example.slug}`}>{example.name}</a>)}</div></section><Credits /></> }
