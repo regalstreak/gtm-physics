@@ -38,7 +38,10 @@ const motions = {
 }
 
 function readSharedAnswers() {
-  try { return JSON.parse(decodeURIComponent(window.location.hash.slice(1))) } catch { return null }
+  try {
+    const encoded = new URLSearchParams(window.location.search).get('r') || window.location.hash.slice(1)
+    return encoded ? JSON.parse(decodeURIComponent(encoded)) : null
+  } catch { return null }
 }
 
 function calculate(answers) {
@@ -70,7 +73,7 @@ export default function App() {
   const reset = () => { window.history.replaceState(null, '', window.location.pathname); setAnswers({}); setIndex(0); setScreen('intro') }
 
   if (screen === 'intro') return <main className="app"><Hero onStart={() => setScreen('quiz')} /></main>
-  if (screen === 'result') return <main className="app"><Results ranking={ranking} answers={answers} onReset={reset} copied={copied} onCopy={() => { const link = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(JSON.stringify(answers))}`; navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1600) }} /></main>
+  if (screen === 'result') return <main className="app"><Results ranking={ranking} answers={answers} onReset={reset} copied={copied} onCopy={() => { const link = `${window.location.origin}${window.location.pathname}?r=${encodeURIComponent(JSON.stringify(answers))}`; navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1600) }} /></main>
 
   return <main className="app quiz-shell">
     <header className="quiz-header"><button className="brand" onClick={() => setScreen('intro')}><span>GTM</span> PHYSICS <i /></button><div className="progress-label">DIAGNOSTIC <b>{String(index + 1).padStart(2, '0')} / {axes.length}</b></div><button className="exit" onClick={() => setScreen('intro')}><X size={17} /> Exit</button></header>
