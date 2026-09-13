@@ -37,10 +37,26 @@ const motions = {
   community: { name: 'Community-led', accent: '#F9A8D4', color: '#500724', description: 'Build an enthusiast network that teaches, validates, and spreads the product alongside you.', signals: ['technical', 'atom', 'virality', 'frequency'], tactics: ['Give power users a stage', 'Create artifacts members want to share', 'Turn experts into ecosystem partners'] },
 }
 
+function encodeAnswers(answers) {
+  const value = axes.reduce((total, axis) => total * 5 + ((answers[axis.id] ?? 3) - 1), 0)
+  const bytes = String.fromCharCode((value >>> 24) & 255, (value >>> 16) & 255, (value >>> 8) & 255, value & 255)
+  return btoa(bytes).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
+}
+
 function readSharedAnswers() {
   try {
     const encoded = new URLSearchParams(window.location.search).get('r') || window.location.hash.slice(1)
-    return encoded ? JSON.parse(decodeURIComponent(encoded)) : null
+    if (!encoded) return null
+    if (encoded.startsWith('{') || encoded.startsWith('%7B')) return JSON.parse(decodeURIComponent(encoded))
+    const binary = atob(encoded.replaceAll('-', '+').replaceAll('_', '/') + '==='.slice((encoded.length + 3) % 4))
+    let value = 0
+    for (let i = 0; i < binary.length; i += 1) value = value * 256 + binary.charCodeAt(i)
+    const answers = {}
+    for (let i = axes.length - 1; i >= 0; i -= 1) {
+      answers[axes[i].id] = (value % 5) + 1
+      value = Math.floor(value / 5)
+    }
+    return answers
   } catch { return null }
 }
 
@@ -73,7 +89,7 @@ export default function App() {
   const reset = () => { window.history.replaceState(null, '', window.location.pathname); setAnswers({}); setIndex(0); setScreen('intro') }
 
   if (screen === 'intro') return <main className="app"><Hero onStart={() => setScreen('quiz')} /></main>
-  if (screen === 'result') return <main className="app"><Results ranking={ranking} answers={answers} onReset={reset} copied={copied} onCopy={() => { const link = `${window.location.origin}${window.location.pathname}?r=${encodeURIComponent(JSON.stringify(answers))}`; navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1600) }} /></main>
+  if (screen === 'result') return <main className="app"><Results ranking={ranking} answers={answers} onReset={reset} copied={copied} onCopy={() => { const link = `${window.location.origin}${window.location.pathname}?r=${encodeAnswers(answers)}`; navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1600) }} /></main>
 
   return <main className="app quiz-shell">
     <header className="quiz-header"><button className="brand" onClick={() => setScreen('intro')}><span>GTM</span> PHYSICS <i /></button><div className="progress-label">DIAGNOSTIC <b>{String(index + 1).padStart(2, '0')} / {axes.length}</b></div><button className="exit" onClick={() => setScreen('intro')}><X size={17} /> Exit</button></header>
