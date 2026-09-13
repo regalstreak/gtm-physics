@@ -87,9 +87,13 @@ export default function App() {
   const answer = answers[axis?.id] ?? 3
   const update = (value) => setAnswers((current) => ({ ...current, [axis.id]: value }))
   const reset = () => { window.history.replaceState(null, '', window.location.pathname); setAnswers({}); setIndex(0); setScreen('intro') }
+  const showResults = () => {
+    window.history.replaceState(null, '', `${window.location.pathname}?r=${encodeAnswers(answers)}`)
+    setScreen('result')
+  }
 
   if (screen === 'intro') return <main className="app"><Hero onStart={() => setScreen('quiz')} /></main>
-  if (screen === 'result') return <main className="app"><Results ranking={ranking} answers={answers} onReset={reset} copied={copied} onCopy={() => { const link = `${window.location.origin}${window.location.pathname}?r=${encodeAnswers(answers)}`; navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1600) }} /></main>
+  if (screen === 'result') return <main className="app"><Results ranking={ranking} answers={answers} onReset={reset} copied={copied} onCopy={() => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 1600) }} /></main>
 
   return <main className="app quiz-shell">
     <header className="quiz-header"><button className="brand" onClick={() => setScreen('intro')}><span>GTM</span> PHYSICS <i /></button><div className="progress-label">DIAGNOSTIC <b>{String(index + 1).padStart(2, '0')} / {axes.length}</b></div><button className="exit" onClick={() => setScreen('intro')}><X size={17} /> Exit</button></header>
@@ -98,7 +102,7 @@ export default function App() {
       <div className="question-meta"><span className="axis-icon">{axis.icon}</span></div>
       <h1>{axis.name}</h1><p>{axis.hint}</p>
       <div className="spectrum-card"><div className="spectrum-head"><span>{axis.low}</span><span>{axis.high}</span></div><div className="range-row"><span>01</span><input aria-label={axis.name} type="range" min="1" max="5" step="1" value={answer} onChange={(e) => update(+e.target.value)} style={{ '--fill': `${((answer - 1) / 4) * 100}%` }} /><span>05</span></div><div className="range-steps">{[1,2,3,4,5].map((v) => <button key={v} onClick={() => update(v)} className={answer === v ? 'selected' : ''}>{v === 1 ? 'Low' : v === 5 ? 'High' : ''}</button>)}</div></div>
-      <div className="question-footer"><button className="back" onClick={() => index ? setIndex(index - 1) : setScreen('intro')}><ChevronLeft size={18}/> Back</button><button className="next" onClick={() => index === axes.length - 1 ? setScreen('result') : setIndex(index + 1)}>{index === axes.length - 1 ? 'See my GTM motion' : 'Next axis'} <ArrowRight size={18}/></button></div>
+      <div className="question-footer"><button className="back" onClick={() => index ? setIndex(index - 1) : setScreen('intro')}><ChevronLeft size={18}/> Back</button><button className="next" onClick={() => index === axes.length - 1 ? showResults() : setIndex(index + 1)}>{index === axes.length - 1 ? 'See my GTM motion' : 'Next axis'} <ArrowRight size={18}/></button></div>
     </section>
   </main>
 }
